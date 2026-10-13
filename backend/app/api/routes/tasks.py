@@ -16,8 +16,7 @@ async def create_task(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user) 
 ):
-    # Створюємо задачу і автоматично прив'язуємо її до id користувача з токена
-    new_task = Task(**task_in.model_dump(), owner_id=current_user.id)
+    new_task = Task(**task_in.model_dump(), created_by=current_user.user_id)
     db.add(new_task)
     await db.commit()
     await db.refresh(new_task)
