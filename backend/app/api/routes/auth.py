@@ -2,11 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from redis.asyncio import Redis
 
 from app.db.database import get_db
+from app.db.redis import get_redis
 from app.db.models import User
 from app.schemas.user import UserCreate, UserResponse, Token
+from app.core.config import settings
 from app.core.security import get_password_hash, verify_password, create_access_token
+from app.api.dependencies import get_current_user, oauth2_scheme
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -59,7 +63,13 @@ async def login(
 
 @router.get("/logout")
 async def logout(
-    # current_user: User = Depends(get_current_user),
+    token: str = Depends(oauth2_scheme),
+    current_user: User = Depends(get_current_user),
+    redis: Redis = Depends(get_redis)
 ):
-
-    return {"message": "Logout successful"}
+    ttl = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    
+    # Додаємо токен у чорний список (Blacklist) в Redis з префіксом bl_
+    await redis.setex(f"bl_{token}", ttl, "true")
+    
+    return {"message": "Successfully logged out"}
