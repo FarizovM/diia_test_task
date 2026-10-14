@@ -39,13 +39,13 @@ class Task(Base):
     task_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     title = Column(String(255), index=True, nullable=False)
     description = Column(Text, nullable=True)
-    status = Column(Enum(TaskStatus), default=TaskStatus.TODO, nullable=False)
-    priority = Column(Enum(TaskPriority), default=TaskPriority.MEDIUM, nullable=False)
-    deadline = Column(DateTime(timezone=True), nullable=True)
+    status = Column(Enum(TaskStatus), default=TaskStatus.TODO, nullable=False, index=True)
+    priority = Column(Enum(TaskPriority), default=TaskPriority.MEDIUM, nullable=False, index=True)
+    deadline = Column(DateTime(timezone=True), nullable=True, index=True)
     
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    created_by = Column(String(36), ForeignKey("users.user_id", ondelete="RESTRICT"), nullable=False)
+    created_by = Column(String(36), ForeignKey("users.user_id", ondelete="RESTRICT"), nullable=False, index=True)
     updated_by = Column(String(36), ForeignKey("users.user_id", ondelete="SET NULL"), nullable=True)
 
     creator = relationship("User", foreign_keys=[created_by], backref="created_tasks")
