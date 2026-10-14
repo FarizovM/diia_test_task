@@ -6,6 +6,8 @@ from app.db.database import get_db
 from app.db.models import User
 from app.api.dependencies import get_current_user
 
+from app.schemas.stats import TaskStats
+
 router = APIRouter(prefix="/stats", tags=["Stats"])
 
 STATS_BASE_SQL = """
@@ -27,22 +29,22 @@ STATS_BASE_SQL = """
     from tasks
 """
 
-@router.get("/all", status_code=status.HTTP_200_OK)
+@router.get("/all", response_model=TaskStats, status_code=status.HTTP_200_OK)
 async def get_stats_all(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     stmt = text(STATS_BASE_SQL)
     result = await db.execute(stmt)
-    row = result.mappings().first()
-    return dict(row) if row else {}
+    row = result.first()
+    return row
 
-@router.get("/me", status_code=status.HTTP_200_OK)
+@router.get("/me", response_model=TaskStats, status_code=status.HTTP_200_OK)
 async def get_stats(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     stmt = text(STATS_BASE_SQL + " where created_by = :user_id")
     result = await db.execute(stmt, {"user_id": current_user.user_id})
-    row = result.mappings().first()
-    return dict(row) if row else {}
+    row = result.first()
+    return row
