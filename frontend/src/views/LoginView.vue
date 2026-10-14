@@ -93,7 +93,7 @@ const handleSubmit = async (): Promise<void> => {
         : await authStore.login(email.value, password.value)
 
     if (success) {
-        router.push('/tasks')
+        router.push('/about')
     }
 }
 </script>

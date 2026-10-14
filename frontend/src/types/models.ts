@@ -40,3 +40,20 @@ export interface TaskCreatePayload {
 }
 
 export interface TaskUpdatePayload extends Partial<TaskCreatePayload> { }
+
+export interface TaskStats {
+    total: number
+    todo: number
+    in_progress: number
+    qa: number
+    done: number
+    flagged: number
+    lowest: number
+    low: number
+    medium: number
+    high: number
+    highest: number
+    no_deadline: number
+    has_deadline: number
+    overdue: number
+}

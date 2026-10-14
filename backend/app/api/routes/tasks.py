@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -134,7 +134,7 @@ async def update_task(
     task.status = task_in.status
     task.priority = task_in.priority
     task.deadline = task_in.deadline
-    task.updated_at = datetime.utcnow()
+    task.updated_at = datetime.now(timezone.utc)
     task.updated_by = current_user.user_id
 
     await db.commit()
