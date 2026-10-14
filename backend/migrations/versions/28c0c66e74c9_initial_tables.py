@@ -39,7 +39,7 @@ def upgrade() -> None:
     sa.Column('task_id', sa.String(length=36), nullable=False),
     sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('status', sa.Enum('TODO', 'IN_PROGRESS', 'QA', 'DONE', name='taskstatus'), nullable=False),
+    sa.Column('status', sa.Enum('TODO', 'IN_PROGRESS', 'QA', 'DONE','FLAGGED', name='taskstatus'), nullable=False),
     sa.Column('priority', sa.Enum('LOWEST', 'LOW', 'MEDIUM', 'HIGH', 'HIGHEST', name='taskpriority'), nullable=False),
     sa.Column('deadline', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),

@@ -12,6 +12,7 @@ class TaskStatus(str, enum.Enum):
     IN_PROGRESS = "in_progress"
     QA = "qa"
     DONE = "done"
+    FLAGGED = "flagged"
 
 class TaskPriority(str, enum.Enum):
     LOWEST = "lowest"

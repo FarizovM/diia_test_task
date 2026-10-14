@@ -168,7 +168,7 @@ async def seed():
             {
                 "title": "Впровадження Rate Limiting для публічних ендпоінтів",
                 "description": "Обмежити кількість запитів на вхід за допомогою Redis для захисту від brute-force атак.",
-                "status": TaskStatus.TODO,
+                "status": TaskStatus.FLAGGED,
                 "priority": TaskPriority.HIGHEST,
                 "deadline": now + timedelta(days=8),
             },

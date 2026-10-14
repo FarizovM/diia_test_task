@@ -105,10 +105,38 @@ async def delete_task(
     task = result.scalars().first()
 
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Не знайдено")
 
     if task.created_by != current_user.user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this task")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Немає прав на видалення цієї задачі")
 
     await db.delete(task)
     await db.commit()
+
+@router.put("/{task_id}", response_model=TaskResponse, status_code=status.HTTP_200_OK)
+async def update_task(
+    task_id: str,
+    task_in: TaskUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    result = await db.execute(select(Task).where(Task.task_id == task_id))
+    task = result.scalars().first()
+
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Не знайдено")
+
+    if task.created_by != current_user.user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Немає прав на редагування цієї задачі")
+
+    task.title = task_in.title
+    task.description = task_in.description
+    task.status = task_in.status
+    task.priority = task_in.priority
+    task.deadline = task_in.deadline
+    task.updated_at = datetime.utcnow()
+    task.updated_by = current_user.user_id
+
+    await db.commit()
+    await db.refresh(task)
+    return task
