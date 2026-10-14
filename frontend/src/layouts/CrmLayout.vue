@@ -11,7 +11,7 @@
                     </div>
                     <div>
                         <div class="font-bold text-base tracking-tight">ТРЕМБІТА</div>
-                        <div class="text-xs text-gray-400">Управління реєстрами</div>
+                        <div class="text-xs text-gray-400">Управління задачами</div>
                     </div>
                 </div>
 
