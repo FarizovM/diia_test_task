@@ -9,11 +9,19 @@ const routes: RouteRecordRaw[] = [
     {
         path: '/',
         component: CrmLayout,
-        redirect: '/tasks',
+        redirect: '/about',
         meta: { requiresAuth: true },
         children: [
-            { path: 'tasks', name: 'Tasks', component: TasksView },
-            { path: 'about', name: 'About', component: AboutView },
+            {
+                path: 'about',
+                name: 'About',
+                component: AboutView
+            },
+            {
+                path: 'tasks',
+                name: 'Tasks',
+                component: TasksView
+            },
         ],
     },
 ]
