@@ -44,7 +44,7 @@ class Task(Base):
     deadline = Column(DateTime(timezone=True), nullable=True, index=True)
     
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), nullable=True, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     created_by = Column(String(36), ForeignKey("users.user_id", ondelete="RESTRICT"), nullable=False, index=True)
     updated_by = Column(String(36), ForeignKey("users.user_id", ondelete="SET NULL"), nullable=True)
 
