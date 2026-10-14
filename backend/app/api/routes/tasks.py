@@ -25,6 +25,7 @@ async def create_task(
 
 @router.get("/", response_model=List[TaskResponse])
 async def get_tasks(
+    search: Optional[str] = Query(None,description="Пошуковий запит за назвою та описом"),
     status: Optional[TaskStatus] = Query(None,description="Фільтр за статусом"),
     priority: Optional[TaskPriority] = Query(None,description="Фільтр за пріоритетом"),
     deadline: Optional[date] = Query(None,description="Фільтр за дедлайном"),
@@ -73,6 +74,13 @@ async def get_tasks(
         query = query.where(Task.priority == priority)
     if deadline:
         query = query.where(cast(Task.deadline, Date) == deadline)
+    if search:
+        query = query.where(
+            or_(
+                Task.title.ilike(f"%{search}%"),
+                Task.description.ilike(f"%{search}%")
+            )
+        )
         
     query = query.order_by(order_clause)
     query = query.limit(limit).offset(offset)
