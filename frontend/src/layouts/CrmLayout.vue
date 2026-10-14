@@ -17,10 +17,29 @@
 
                 <!-- Динамічне меню з JSON-конфігу -->
                 <nav class="p-4 space-y-1.5">
-                    <div class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                        Навігація (Low-Code)
+
+                    <!-- Пошук по пунктах меню -->
+                    <div class="relative mb-2">
+                        <span
+                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </span>
+                        <input v-model="searchQuery" type="text" placeholder="Пошук у меню..."
+                            class="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:bg-white/10 focus:border-white/20 transition" />
+                        <button v-if="searchQuery" type="button" @click="searchQuery = ''"
+                            class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-white transition focus:outline-none"
+                            title="Очистити">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
-                    <router-link v-for="item in navItems" :key="item.id" :to="item.route"
+
+                    <router-link v-for="item in filteredNavItems" :key="item.id" :to="item.route"
                         class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all"
                         :class="$route.path.startsWith(item.route)
                             ? 'bg-diia-accent text-black font-semibold'
@@ -32,6 +51,10 @@
                             <span>{{ item.title }}</span>
                         </div>
                     </router-link>
+
+                    <div v-if="filteredNavItems.length === 0" class="px-3 py-4 text-xs text-center text-gray-400">
+                        Розділ не знайдено
+                    </div>
                 </nav>
             </div>
 
@@ -58,13 +81,22 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import rawNavItems from '../config/navigation.json'
 import type { NavItem } from '../types/config'
 
 const navItems = rawNavItems as NavItem[]
+const searchQuery = ref<string>('')
+
+const filteredNavItems = computed<NavItem[]>(() => {
+    const query = searchQuery.value.trim().toLowerCase()
+    if (!query) {
+        return navItems
+    }
+    return navItems.filter((item) => item.title.toLowerCase().includes(query))
+})
 const authStore = useAuthStore()
 const router = useRouter()
 
