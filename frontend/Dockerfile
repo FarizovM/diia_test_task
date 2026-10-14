@@ -2,11 +2,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Копіюємо package.json (створимо його пізніше при ініціалізації Vue)
-# COPY package*.json ./
-# RUN npm install
+COPY package*.json ./
 
-# Аналогічно, код буде монтуватися через volume
-# COPY . .
+RUN npm install
+
+COPY . .
 
 CMD ["npm", "run", "dev", "--", "--host"]

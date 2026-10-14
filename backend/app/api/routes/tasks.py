@@ -1,11 +1,12 @@
+from datetime import date
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import Date,cast
-from typing import List
+from sqlalchemy import Date, cast, or_
 
 from app.db.database import get_db
-from app.db.models import Task, User
+from app.db.models import Task, User, TaskStatus, TaskPriority
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
 from app.api.dependencies import get_current_user
 
@@ -96,11 +97,11 @@ async def get_tasks(
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
-    task_id: int,
+    task_id: str,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    result = await db.execute(select(Task).where(Task.id == task_id))
+    result = await db.execute(select(Task).where(Task.task_id == task_id))
     task = result.scalars().first()
 
     if not task:
