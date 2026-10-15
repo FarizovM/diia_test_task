@@ -1,11 +1,5 @@
 <template>
   <div class="bg-white rounded-3xl border border-gray-200/90 shadow-xs overflow-hidden relative">
-    <!-- Тонкий індикатор завантаження вгорі таблиці -->
-    <div
-      v-if="isLoading"
-      class="h-1 w-full bg-diia-accent overflow-hidden absolute top-0 left-0 right-0 z-10 animate-pulse"
-    ></div>
-
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse table-fixed min-w-[800px]">
         <!-- Заголовки стовпців -->
