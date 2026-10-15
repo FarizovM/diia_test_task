@@ -65,10 +65,15 @@
                 <div class="flex items-center justify-between">
                     <div class="truncate pr-2">
                         <div class="text-xs text-gray-400">Авторизовано як:</div>
-                        <div class="text-sm font-medium truncate">{{ authStore.user?.email || 'Завантаження...' }}</div>
+                        <div class="text-sm font-semibold truncate text-white" :title="userDisplayName">
+                            {{ userDisplayName }}
+                        </div>
+                        <div v-if="authStore.user?.first_name" class="text-[11px] text-gray-400 truncate" :title="authStore.user?.email">
+                            {{ authStore.user?.email }}
+                        </div>
                     </div>
                     <button @click="handleLogout"
-                        class="px-3 py-2 rounded-lg bg-white/10 hover:bg-red-500/20 hover:text-red-300 text-xs font-medium transition">
+                        class="px-3 py-2 rounded-lg bg-white/10 hover:bg-red-500/20 hover:text-red-300 text-xs font-medium transition cursor-pointer">
                         Вийти
                     </button>
                 </div>
@@ -100,6 +105,12 @@ const filteredNavItems = computed<NavItem[]>(() => {
 })
 const authStore = useAuthStore()
 const router = useRouter()
+
+const userDisplayName = computed(() => {
+    if (!authStore.user) return 'Завантаження...'
+    const fullName = [authStore.user.first_name, authStore.user.last_name].filter(Boolean).join(' ')
+    return fullName || authStore.user.email
+})
 
 onMounted(() => {
     if (!authStore.user) {

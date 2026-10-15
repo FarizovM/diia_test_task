@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { AxiosError } from 'axios'
 import api from '../api/axios'
-import type { User, AuthTokenResponse } from '../types/models'
+import type { User, AuthTokenResponse, UserRegisterPayload } from '../types/models'
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref<User | null>(null)
@@ -37,15 +37,22 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function register(email: string, password: string): Promise<boolean> {
+    async function register(payload: UserRegisterPayload): Promise<boolean> {
         loading.value = true
         error.value = null
         try {
-            await api.post<User>('/auth/register', { email, password })
-            return await login(email, password)
+            await api.post<User>('/auth/register', payload)
+            return await login(payload.email, payload.password)
         } catch (err) {
-            const axiosErr = err as AxiosError<{ detail?: string }>
-            error.value = axiosErr.response?.data?.detail || 'Помилка реєстрації'
+            const axiosErr = err as AxiosError<{ detail?: string | any[] }>
+            const detail = axiosErr.response?.data?.detail
+            if (typeof detail === 'string') {
+                error.value = detail
+            } else if (Array.isArray(detail) && detail.length > 0) {
+                error.value = detail.map((e: any) => e.msg || e.message).join(', ')
+            } else {
+                error.value = 'Помилка реєстрації'
+            }
             return false
         } finally {
             loading.value = false

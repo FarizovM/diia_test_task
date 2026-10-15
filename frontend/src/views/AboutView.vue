@@ -24,7 +24,7 @@
                     <div v-if="authStore.user" class="mt-4 flex items-center gap-2 text-xs text-gray-500">
                         <span class="font-medium text-gray-700">
                             Користувач: {{ authStore.user.last_name }} {{ authStore.user.first_name }} {{
-                            authStore.user?.middle_name }}
+                                authStore.user?.middle_name }}
                         </span>
                         <span>•</span>
                         <span>{{ authStore.user.email }}</span>
@@ -100,106 +100,20 @@
 
         <!-- Карточки ключових метрик (KPI) -->
         <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <!-- Всього -->
-            <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow transition">
+            <div v-for="stat in indexStats" :key="stat.key"
+                class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow transition">
                 <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
-                    <span class="font-medium">Всього задач</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-black"></span>
+                    <span class="font-medium">{{ stat.title }}</span>
+                    <span class="w-2.5 h-2.5 rounded-full" :class="stat.dotColor"></span>
                 </div>
-                <div class="text-2xl font-bold text-gray-900">
-                    {{ displayStats?.total ?? 0 }}
+                <div class="text-2xl font-bold" :class="stat.valueColor">
+                    {{ displayStats?.[stat.key] ?? 0 }}
                 </div>
                 <div class="mt-2 text-[11px] text-gray-500">
                     <span v-if="activeTab === 'compare'">
-                        Моїх: <strong class="text-black">{{ statsMe?.total ?? 0 }}</strong> із {{ statsAll?.total ?? 0
-                        }}
+                        Моїх: <strong :class="stat.compareClass || 'text-black'">{{ statsMe?.[stat.key] ?? 0 }}</strong>
                     </span>
-                    <span v-else>Усі зареєстровані</span>
-                </div>
-            </div>
-
-            <!-- В процесі -->
-            <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow transition">
-                <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
-                    <span class="font-medium">В процесі</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                </div>
-                <div class="text-2xl font-bold text-blue-600">
-                    {{ displayStats?.in_progress ?? 0 }}
-                </div>
-                <div class="mt-2 text-[11px] text-gray-500">
-                    <span v-if="activeTab === 'compare'">
-                        Моїх: <strong class="text-black">{{ statsMe?.in_progress ?? 0 }}</strong>
-                    </span>
-                    <span v-else>Активно розробляються</span>
-                </div>
-            </div>
-
-            <!-- QA -->
-            <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow transition">
-                <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
-                    <span class="font-medium">На QA</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                </div>
-                <div class="text-2xl font-bold text-amber-600">
-                    {{ displayStats?.qa ?? 0 }}
-                </div>
-                <div class="mt-2 text-[11px] text-gray-500">
-                    <span v-if="activeTab === 'compare'">
-                        Моїх: <strong class="text-black">{{ statsMe?.qa ?? 0 }}</strong>
-                    </span>
-                    <span v-else>Тестування / Перевірка</span>
-                </div>
-            </div>
-
-            <!-- Виконано -->
-            <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow transition">
-                <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
-                    <span class="font-medium">Виконано</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                </div>
-                <div class="text-2xl font-bold text-emerald-600">
-                    {{ displayStats?.done ?? 0 }}
-                </div>
-                <div class="mt-2 text-[11px] text-gray-500">
-                    <span v-if="activeTab === 'compare'">
-                        Моїх: <strong class="text-black">{{ statsMe?.done ?? 0 }}</strong>
-                    </span>
-                    <span v-else>Успішно завершено</span>
-                </div>
-            </div>
-
-            <!-- Заблоковано -->
-            <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow transition">
-                <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
-                    <span class="font-medium">Заблоковано</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-                </div>
-                <div class="text-2xl font-bold text-red-600">
-                    {{ displayStats?.flagged ?? 0 }}
-                </div>
-                <div class="mt-2 text-[11px] text-gray-500">
-                    <span v-if="activeTab === 'compare'">
-                        Моїх: <strong class="text-black">{{ statsMe?.flagged ?? 0 }}</strong>
-                    </span>
-                    <span v-else>Потребують уваги</span>
-                </div>
-            </div>
-
-            <!-- Прострочено -->
-            <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow transition">
-                <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
-                    <span class="font-medium">Прострочено</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-                </div>
-                <div class="text-2xl font-bold text-rose-600">
-                    {{ displayStats?.overdue ?? 0 }}
-                </div>
-                <div class="mt-2 text-[11px] text-gray-500">
-                    <span v-if="activeTab === 'compare'">
-                        Моїх: <strong class="text-rose-700">{{ statsMe?.overdue ?? 0 }}</strong>
-                    </span>
-                    <span v-else>Дедлайн вийшов</span>
+                    <span v-else>{{ stat.subtitle }}</span>
                 </div>
             </div>
         </div>
@@ -514,6 +428,66 @@ const fetchStats = async (): Promise<void> => {
         loading.value = false
     }
 }
+
+interface StatCardConfig {
+    title: string
+    key: keyof TaskStats
+    dotColor: string
+    valueColor: string
+    subtitle: string
+    compareClass?: string
+}
+
+const indexStats: StatCardConfig[] = [
+    {
+        title: 'Всього задач',
+        key: 'total',
+        dotColor: 'bg-black',
+        valueColor: 'text-gray-900',
+        subtitle: 'Усі зареєстровані',
+        compareClass: 'text-black',
+    },
+    {
+        title: 'В процесі',
+        key: 'in_progress',
+        dotColor: 'bg-blue-500',
+        valueColor: 'text-blue-600',
+        subtitle: 'Активно розробляються',
+        compareClass: 'text-black',
+    },
+    {
+        title: 'На QA',
+        key: 'qa',
+        dotColor: 'bg-amber-500',
+        valueColor: 'text-amber-600',
+        subtitle: 'Тестування / Перевірка',
+        compareClass: 'text-black',
+    },
+    {
+        title: 'Виконано',
+        key: 'done',
+        dotColor: 'bg-emerald-500',
+        valueColor: 'text-emerald-600',
+        subtitle: 'Успішно завершено',
+        compareClass: 'text-black',
+    },
+    {
+        title: 'Заблоковано',
+        key: 'flagged',
+        dotColor: 'bg-red-500',
+        valueColor: 'text-red-600',
+        subtitle: 'Потребують уваги',
+        compareClass: 'text-black',
+    },
+    {
+        title: 'Прострочено',
+        key: 'overdue',
+        dotColor: 'bg-rose-500 animate-pulse',
+        valueColor: 'text-rose-600',
+        subtitle: 'Дедлайн вийшов',
+        compareClass: 'text-rose-700',
+    },
+]
 
 onMounted(() => {
     fetchStats()

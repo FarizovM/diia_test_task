@@ -13,6 +13,14 @@ export interface User {
     updated_by: string | null
 }
 
+export interface UserRegisterPayload {
+    email: string
+    password: string
+    first_name: string
+    last_name: string
+    middle_name?: string | null
+}
+
 export interface AuthTokenResponse {
     access_token: string
     token_type: string

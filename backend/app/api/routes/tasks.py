@@ -101,11 +101,7 @@ async def get_tasks(
     result = await db.execute(query)
 
     tasks = result.scalars().all()
-    if not tasks:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tasks not found",
-        )
+
     return TaskRegistryResponse(
         total=total,
         filtered=filtered,
