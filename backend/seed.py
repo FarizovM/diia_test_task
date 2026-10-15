@@ -189,8 +189,9 @@ async def seed():
         ]
 
         created_count = 0
-        for data in tasks_data:
+        for i, data in enumerate(tasks_data):
             if data["title"] not in existing_tasks:
+                task_time = now - timedelta(minutes=(len(tasks_data) - i) * 10)
                 task = Task(
                     task_id=str(uuid.uuid4()),
                     title=data["title"],
@@ -200,8 +201,8 @@ async def seed():
                     deadline=data["deadline"],
                     created_by=user.user_id,
                     updated_by=user.user_id,
-                    created_at=now,
-                    updated_at=now,
+                    created_at=task_time,
+                    updated_at=task_time,
                 )
                 session.add(task)
                 created_count += 1

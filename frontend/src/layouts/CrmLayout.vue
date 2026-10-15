@@ -1,7 +1,7 @@
 <template>
-    <div class="min-h-screen flex bg-diia-light">
+    <div class="h-screen flex bg-diia-light overflow-hidden">
         <!-- Бокова панель у стилі Дія -->
-        <aside class="w-72 bg-diia-dark text-white flex flex-col justify-between shrink-0">
+        <aside class="w-72 bg-diia-dark text-white flex flex-col justify-between shrink-0 h-full overflow-y-auto">
             <div>
                 <!-- Логотип -->
                 <router-link to="/about">
@@ -80,7 +80,7 @@
             </div>
         </aside>
 
-        <main class="flex-1 p-8 overflow-y-scroll [scrollbar-gutter:stable]">
+        <main class="flex-1 h-full p-8 overflow-y-auto [scrollbar-gutter:stable]">
             <router-view />
         </main>
     </div>

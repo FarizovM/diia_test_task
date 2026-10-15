@@ -96,8 +96,8 @@ async def get_tasks(
         )
     ).scalar() or 0
         
-    query = query.order_by(order_clause)
-    query = query.limit(limit).offset(offset)
+    query = query.order_by(order_clause).limit(limit).offset(offset)    
+
     result = await db.execute(query)
 
     tasks = result.scalars().all()

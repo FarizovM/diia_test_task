@@ -49,7 +49,12 @@ export const useAuthStore = defineStore('auth', () => {
             if (typeof detail === 'string') {
                 error.value = detail
             } else if (Array.isArray(detail) && detail.length > 0) {
-                error.value = detail.map((e: any) => e.msg || e.message).join(', ')
+                error.value = detail
+                    .map((e: any) => {
+                        const raw = String(e.msg || e.message || '')
+                        return raw.replace(/^Value error,\s*/i, '')
+                    })
+                    .join(', ')
             } else {
                 error.value = 'Помилка реєстрації'
             }

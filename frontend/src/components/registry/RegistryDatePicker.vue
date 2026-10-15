@@ -1,27 +1,14 @@
 <template>
   <div ref="datePickerRoot" class="relative">
     <!-- Тригер вибору дати у стилі Дія -->
-    <button
-      type="button"
-      :disabled="disabled"
-      @click="togglePicker"
+    <button type="button" :disabled="disabled" @click="togglePicker"
       class="w-full bg-diia-light/50 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm text-left flex items-center justify-between transition-all focus:outline-none focus:bg-white focus:border-black cursor-pointer hover:bg-gray-100/60 disabled:opacity-50 disabled:cursor-not-allowed"
-      :class="{ 'border-black bg-white ring-1 ring-black/5': isOpen }"
-    >
+      :class="{ 'border-black bg-white ring-1 ring-black/5': isOpen }">
       <div class="flex items-center gap-2.5 truncate">
         <!-- Іконка календаря Дія -->
-        <svg
-          class="w-4 h-4 text-gray-500 shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1.8"
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
+        <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
 
         <!-- Відформатована дата або плейсхолдер -->
@@ -35,169 +22,125 @@
 
       <!-- Кнопка очищення або стрілочка -->
       <div class="flex items-center gap-1.5 ml-2 shrink-0">
-        <button
-          v-if="modelValue"
-          type="button"
-          @click.stop="clearDate"
+        <button v-if="modelValue" type="button" @click.stop="clearDate"
           class="p-1 rounded-full text-gray-400 hover:text-black hover:bg-gray-200/60 transition cursor-pointer"
-          title="Очистити дату"
-        >
+          title="Очистити дату">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <svg
-          class="w-4 h-4 text-gray-400 transition-transform duration-200"
-          :class="{ 'rotate-180 text-black': isOpen }"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200"
+          :class="{ 'rotate-180 text-black': isOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
       </div>
     </button>
 
     <!-- Випадаючий календар Дія -->
-    <Transition name="dropdown">
-      <div
-        v-if="isOpen"
-        class="absolute left-0 z-50 w-80 bg-white rounded-3xl border border-gray-100 shadow-2xl p-4 ring-1 ring-black/5"
-        :class="openUpward ? 'bottom-full mb-2' : 'top-full mt-2'"
-      >
-        <!-- Навігація по місяцях -->
-        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-          <button
-            type="button"
-            @click="prevMonth"
-            class="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-100 transition cursor-pointer"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          <span class="text-sm font-bold text-diia-primary">
-            {{ currentMonthName }} {{ viewYear }}
-          </span>
-
-          <button
-            type="button"
-            @click="nextMonth"
-            class="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-100 transition cursor-pointer"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Дні тижня -->
-        <div class="grid grid-cols-7 gap-1 text-center py-2">
-          <span
-            v-for="dayName in weekDayNames"
-            :key="dayName"
-            class="text-[11px] font-semibold text-gray-400 uppercase"
-          >
-            {{ dayName }}
-          </span>
-        </div>
-
-        <!-- Сітка днів місяця -->
-        <div class="grid grid-cols-7 gap-1 text-center pb-3">
-          <button
-            v-for="(day, idx) in calendarDays"
-            :key="idx"
-            type="button"
-            @click="selectDay(day)"
-            class="w-8 h-8 mx-auto flex items-center justify-center text-xs rounded-full transition-all cursor-pointer"
-            :class="[
-              day.isSelected
-                ? 'bg-diia-dark text-white font-bold shadow-xs'
-                : day.isToday
-                ? 'ring-1 ring-diia-dark/40 font-bold text-diia-primary hover:bg-gray-100'
-                : day.isCurrentMonth
-                ? 'text-gray-800 hover:bg-gray-100 font-medium'
-                : 'text-gray-300 hover:text-gray-500'
-            ]"
-          >
-            {{ day.dayNumber }}
-          </button>
-        </div>
-
-        <!-- Вибір часу -->
-        <div class="border-t border-gray-100 pt-3 space-y-2">
-          <div class="flex items-center justify-between text-xs">
-            <span class="text-gray-500 font-medium flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <Teleport to="body">
+      <Transition name="dropdown">
+        <div v-if="isOpen" ref="dropdownMenu" :style="pickerStyle"
+          class="fixed z-[9999] w-80 bg-white rounded-3xl border border-gray-100 shadow-2xl p-4 ring-1 ring-black/5">
+          <!-- Навігація по місяцях -->
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+            <button type="button" @click="prevMonth"
+              class="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-100 transition cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
-              Час виконання:
+            </button>
+
+            <span class="text-sm font-bold text-diia-primary">
+              {{ currentMonthName }} {{ viewYear }}
             </span>
 
-            <!-- Інпути годин та хвилин -->
-            <div class="flex items-center gap-1 bg-diia-light/60 border border-gray-200 rounded-xl px-2 py-0.5">
-              <input
-                type="number"
-                min="0"
-                max="23"
-                v-model.number="hours"
-                @change="onTimeInputChange"
-                class="w-7 text-center text-xs font-bold text-diia-primary bg-transparent focus:outline-none"
-              />
-              <span class="text-gray-400 font-bold">:</span>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                v-model.number="minutes"
-                @change="onTimeInputChange"
-                class="w-7 text-center text-xs font-bold text-diia-primary bg-transparent focus:outline-none"
-              />
+            <button type="button" @click="nextMonth"
+              class="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-100 transition cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Дні тижня -->
+          <div class="grid grid-cols-7 gap-1 text-center py-2">
+            <span v-for="dayName in weekDayNames" :key="dayName"
+              class="text-[11px] font-semibold text-gray-400 uppercase">
+              {{ dayName }}
+            </span>
+          </div>
+
+          <!-- Сітка днів місяця -->
+          <div class="grid grid-cols-7 gap-1 text-center pb-3">
+            <button v-for="(day, idx) in calendarDays" :key="idx" type="button" @click="selectDay(day)"
+              class="w-8 h-8 mx-auto flex items-center justify-center text-xs rounded-full transition-all cursor-pointer"
+              :class="[
+                day.isSelected
+                  ? 'bg-diia-dark text-white font-bold shadow-xs'
+                  : day.isToday
+                    ? 'ring-1 ring-diia-dark/40 font-bold text-diia-primary hover:bg-gray-100'
+                    : day.isCurrentMonth
+                      ? 'text-gray-800 hover:bg-gray-100 font-medium'
+                      : 'text-gray-300 hover:text-gray-500'
+              ]">
+              {{ day.dayNumber }}
+            </button>
+          </div>
+
+          <!-- Вибір часу -->
+          <div class="border-t border-gray-100 pt-3 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-gray-500 font-medium flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Час виконання:
+              </span>
+
+              <!-- Інпути годин та хвилин -->
+              <div class="flex items-center gap-1 bg-diia-light/60 border border-gray-200 rounded-xl px-2 py-0.5">
+                <input type="text" inputmode="numeric" maxlength="2" v-model="hoursDisplay" @input="onHoursInput"
+                  @blur="onHoursBlur" @keydown.up.prevent="stepHours(1)" @keydown.down.prevent="stepHours(-1)"
+                  class="w-7 text-center text-xs font-bold text-diia-primary bg-transparent focus:outline-none focus:bg-white rounded transition" />
+                <span class="text-gray-400 font-bold">:</span>
+                <input type="text" inputmode="numeric" maxlength="2" v-model="minutesDisplay" @input="onMinutesInput"
+                  @blur="onMinutesBlur" @keydown.up.prevent="stepMinutes(1)" @keydown.down.prevent="stepMinutes(-1)"
+                  class="w-7 text-center text-xs font-bold text-diia-primary bg-transparent focus:outline-none focus:bg-white rounded transition" />
+              </div>
+            </div>
+
+            <!-- Швидкі пресети часу -->
+            <div class="flex items-center gap-1.5 justify-end">
+              <button v-for="preset in timePresets" :key="preset.label" type="button"
+                @click="applyTimePreset(preset.h, preset.m)"
+                class="px-2 py-0.5 rounded-lg text-[10px] font-medium transition cursor-pointer" :class="[
+                  hours === preset.h && minutes === preset.m
+                    ? 'bg-diia-dark text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ]">
+                {{ preset.label }}
+              </button>
             </div>
           </div>
 
-          <!-- Швидкі пресети часу -->
-          <div class="flex items-center gap-1.5 justify-end">
-            <button
-              v-for="preset in timePresets"
-              :key="preset.label"
-              type="button"
-              @click="applyTimePreset(preset.h, preset.m)"
-              class="px-2 py-0.5 rounded-lg text-[10px] font-medium transition cursor-pointer"
-              :class="[
-                hours === preset.h && minutes === preset.m
-                  ? 'bg-diia-dark text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              ]"
-            >
-              {{ preset.label }}
+          <!-- Нижня панель дій -->
+          <div class="border-t border-gray-100 pt-3 mt-3 flex items-center justify-between">
+            <button type="button" @click="setToday"
+              class="text-xs font-semibold text-gray-600 hover:text-black transition cursor-pointer">
+              Сьогодні
             </button>
+
+            <div class="flex items-center gap-2">
+              <button type="button" @click="isOpen = false"
+                class="px-3.5 py-1.5 rounded-xl bg-diia-dark hover:bg-black text-white text-xs font-semibold transition cursor-pointer">
+                Готово
+              </button>
+            </div>
           </div>
         </div>
-
-        <!-- Нижня панель дій -->
-        <div class="border-t border-gray-100 pt-3 mt-3 flex items-center justify-between">
-          <button
-            type="button"
-            @click="setToday"
-            class="text-xs font-semibold text-gray-600 hover:text-black transition cursor-pointer"
-          >
-            Сьогодні
-          </button>
-
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              @click="isOpen = false"
-              class="px-3.5 py-1.5 rounded-xl bg-diia-dark hover:bg-black text-white text-xs font-semibold transition cursor-pointer"
-            >
-              Готово
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -217,6 +160,8 @@ const emit = defineEmits<{
 
 const isOpen = ref(false)
 const datePickerRoot = ref<HTMLElement | null>(null)
+const dropdownMenu = ref<HTMLElement | null>(null)
+const pickerStyle = ref<Record<string, string>>({})
 
 const now = new Date()
 const viewYear = ref(now.getFullYear())
@@ -224,6 +169,13 @@ const viewMonth = ref(now.getMonth())
 const selectedDate = ref<Date | null>(null)
 const hours = ref(18)
 const minutes = ref(0)
+const hoursDisplay = ref('18')
+const minutesDisplay = ref('00')
+
+function syncDisplayTime() {
+  hoursDisplay.value = String(hours.value).padStart(2, '0')
+  minutesDisplay.value = String(minutes.value).padStart(2, '0')
+}
 
 const weekDayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
 const monthNames = [
@@ -344,6 +296,7 @@ watch(
           viewMonth.value = d.getMonth()
           hours.value = d.getHours()
           minutes.value = d.getMinutes()
+          syncDisplayTime()
           return
         }
       } catch {
@@ -355,16 +308,64 @@ watch(
   { immediate: true }
 )
 
-const openUpward = ref(false)
+function updatePickerPosition() {
+  if (!datePickerRoot.value) return
+  const rect = datePickerRoot.value.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - rect.bottom
+  const spaceAbove = rect.top
+  const calendarHeight = 390
+  const openUpward = spaceBelow < calendarHeight && spaceAbove > spaceBelow
+
+  const calendarWidth = 320
+  let left = rect.left
+  if (left + calendarWidth > window.innerWidth - 16) {
+    left = Math.max(16, window.innerWidth - calendarWidth - 16)
+  }
+
+  const style: Record<string, string> = {
+    position: 'fixed',
+    left: `${left}px`,
+    width: `${calendarWidth}px`,
+    zIndex: '9999',
+  }
+
+  if (openUpward) {
+    style.bottom = `${window.innerHeight - rect.top + 8}px`
+    style.top = 'auto'
+  } else {
+    style.top = `${rect.bottom + 8}px`
+    style.bottom = 'auto'
+  }
+
+  pickerStyle.value = style
+}
 
 function togglePicker() {
   if (props.disabled) return
-  if (!isOpen.value && datePickerRoot.value) {
-    const rect = datePickerRoot.value.getBoundingClientRect()
-    openUpward.value = window.innerHeight - rect.bottom < 380
+  if (!isOpen.value) {
+    updatePickerPosition()
+    isOpen.value = true
+  } else {
+    isOpen.value = false
   }
-  isOpen.value = !isOpen.value
 }
+
+function onScrollOrResize() {
+  if (isOpen.value) {
+    updatePickerPosition()
+  }
+}
+
+watch(isOpen, (open) => {
+  if (open) {
+    updatePickerPosition()
+    window.addEventListener('resize', onScrollOrResize)
+    window.addEventListener('scroll', onScrollOrResize, true)
+  } else {
+    window.removeEventListener('resize', onScrollOrResize)
+    window.removeEventListener('scroll', onScrollOrResize, true)
+  }
+})
 
 function prevMonth() {
   if (viewMonth.value === 0) {
@@ -396,6 +397,7 @@ function selectDay(day: CalendarDay) {
 function applyTimePreset(h: number, m: number) {
   hours.value = h
   minutes.value = m
+  syncDisplayTime()
   if (!selectedDate.value) {
     selectedDate.value = new Date()
   }
@@ -405,9 +407,65 @@ function applyTimePreset(h: number, m: number) {
   emitDate(d)
 }
 
-function onTimeInputChange() {
-  hours.value = Math.max(0, Math.min(23, Number(hours.value) || 0))
-  minutes.value = Math.max(0, Math.min(59, Number(minutes.value) || 0))
+function onHoursInput() {
+  hoursDisplay.value = hoursDisplay.value.replace(/\D/g, '').slice(0, 2)
+  if (hoursDisplay.value !== '') {
+    const val = parseInt(hoursDisplay.value, 10)
+    if (!isNaN(val)) {
+      hours.value = Math.max(0, Math.min(23, val))
+      updateSelectedDateTime()
+    }
+  }
+}
+
+function onHoursBlur() {
+  let val = parseInt(hoursDisplay.value, 10)
+  if (isNaN(val) || val < 0) val = 0
+  if (val > 23) val = 23
+  hours.value = val
+  hoursDisplay.value = String(val).padStart(2, '0')
+  updateSelectedDateTime()
+}
+
+function onMinutesInput() {
+  minutesDisplay.value = minutesDisplay.value.replace(/\D/g, '').slice(0, 2)
+  if (minutesDisplay.value !== '') {
+    const val = parseInt(minutesDisplay.value, 10)
+    if (!isNaN(val)) {
+      minutes.value = Math.max(0, Math.min(59, val))
+      updateSelectedDateTime()
+    }
+  }
+}
+
+function onMinutesBlur() {
+  let val = parseInt(minutesDisplay.value, 10)
+  if (isNaN(val) || val < 0) val = 0
+  if (val > 59) val = 59
+  minutes.value = val
+  minutesDisplay.value = String(val).padStart(2, '0')
+  updateSelectedDateTime()
+}
+
+function stepHours(delta: number) {
+  let h = hours.value + delta
+  if (h > 23) h = 0
+  if (h < 0) h = 23
+  hours.value = h
+  hoursDisplay.value = String(h).padStart(2, '0')
+  updateSelectedDateTime()
+}
+
+function stepMinutes(delta: number) {
+  let m = minutes.value + delta
+  if (m > 59) m = 0
+  if (m < 0) m = 59
+  minutes.value = m
+  minutesDisplay.value = String(m).padStart(2, '0')
+  updateSelectedDateTime()
+}
+
+function updateSelectedDateTime() {
   if (selectedDate.value) {
     const d = new Date(selectedDate.value)
     d.setHours(hours.value, minutes.value, 0, 0)
@@ -422,6 +480,7 @@ function setToday() {
   viewMonth.value = d.getMonth()
   hours.value = d.getHours()
   minutes.value = d.getMinutes()
+  syncDisplayTime()
   selectedDate.value = d
   emitDate(d)
 }
@@ -442,7 +501,11 @@ function emitDate(d: Date) {
 }
 
 function handleClickOutside(e: MouseEvent) {
-  if (datePickerRoot.value && !datePickerRoot.value.contains(e.target as Node)) {
+  if (!isOpen.value) return
+  const target = e.target as Node
+  const isInsideTrigger = datePickerRoot.value && datePickerRoot.value.contains(target)
+  const isInsideDropdown = dropdownMenu.value && dropdownMenu.value.contains(target)
+  if (!isInsideTrigger && !isInsideDropdown) {
     isOpen.value = false
   }
 }
@@ -453,6 +516,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('resize', onScrollOrResize)
+  window.removeEventListener('scroll', onScrollOrResize, true)
 })
 </script>
 

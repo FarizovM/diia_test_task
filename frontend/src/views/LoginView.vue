@@ -92,6 +92,44 @@
                             </svg>
                         </button>
                     </div>
+
+                    <!-- Візуальний чекліст вимог до пароля (у режимі реєстрації) -->
+                    <div v-if="isRegister" class="mt-2.5 p-3.5 bg-diia-light/60 border border-gray-100 rounded-2xl space-y-2 text-xs">
+                        <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                            Вимоги до пароля:
+                        </div>
+                        <div class="space-y-1.5">
+                            <!-- Мінімум 8 символів -->
+                            <div class="flex items-center gap-2 transition-colors"
+                                :class="hasMinLength ? 'text-emerald-700 font-semibold' : 'text-gray-400'">
+                                <svg v-if="hasMinLength" class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span v-else class="w-1.5 h-1.5 rounded-full bg-gray-300 ml-1.5 mr-1 shrink-0"></span>
+                                <span>Щонайменше 8 символів</span>
+                            </div>
+
+                            <!-- Літера -->
+                            <div class="flex items-center gap-2 transition-colors"
+                                :class="hasLetter ? 'text-emerald-700 font-semibold' : 'text-gray-400'">
+                                <svg v-if="hasLetter" class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span v-else class="w-1.5 h-1.5 rounded-full bg-gray-300 ml-1.5 mr-1 shrink-0"></span>
+                                <span>Містить хоча б одну латинську літеру (a-z, A-Z)</span>
+                            </div>
+
+                            <!-- Цифра -->
+                            <div class="flex items-center gap-2 transition-colors"
+                                :class="hasDigit ? 'text-emerald-700 font-semibold' : 'text-gray-400'">
+                                <svg v-if="hasDigit" class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span v-else class="w-1.5 h-1.5 rounded-full bg-gray-300 ml-1.5 mr-1 shrink-0"></span>
+                                <span>Містить хоча б одну цифру (0-9)</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Кнопка відправки форми -->
@@ -119,7 +157,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
@@ -135,17 +173,34 @@ const middleName = ref<string>('')
 const email = ref<string>('')
 const password = ref<string>('')
 
+// Критерії валідації пароля
+const hasMinLength = computed<boolean>(() => password.value.length >= 8)
+const hasLetter = computed<boolean>(() => /[a-zA-Z]/.test(password.value))
+const hasDigit = computed<boolean>(() => /\d/.test(password.value))
+const isPasswordValid = computed<boolean>(() => hasMinLength.value && hasLetter.value && hasDigit.value)
+
 function toggleMode() {
     isRegister.value = !isRegister.value
     authStore.error = null
 }
 
 const handleSubmit = async (): Promise<void> => {
-    if (!email.value || !password.value) return
+    if (!email.value.trim() || !password.value) return
 
     let success = false
     if (isRegister.value) {
-        if (!firstName.value.trim() || !lastName.value.trim()) return
+        if (!lastName.value.trim()) {
+            authStore.error = "Будь ласка, вкажіть прізвище"
+            return
+        }
+        if (!firstName.value.trim()) {
+            authStore.error = "Будь ласка, вкажіть ім'я"
+            return
+        }
+        if (!isPasswordValid.value) {
+            authStore.error = "Пароль не відповідає всім вимогам безпеки"
+            return
+        }
 
         success = await authStore.register({
             email: email.value.trim(),

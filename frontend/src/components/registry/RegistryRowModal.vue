@@ -1,9 +1,10 @@
 <template>
-  <Transition name="fade">
-    <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
-      @click.self="$emit('close')">
-      <div
-        class="bg-white rounded-3xl border border-gray-100 shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        @click.self="$emit('close')">
+        <div
+          class="bg-white rounded-3xl border border-gray-100 shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
         <!-- Шапка модалки -->
         <div class="px-6 sm:px-8 pt-6 pb-4 border-b border-gray-100 flex items-center justify-between">
           <div>
@@ -97,10 +98,11 @@
       </div>
     </div>
   </Transition>
+</Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import type { RegistryColumn } from '../../types/config'
 import RegistrySelect from './RegistrySelect.vue'
 import RegistryDatePicker from './RegistryDatePicker.vue'
@@ -132,6 +134,8 @@ watch(
   () => props.isOpen,
   (open) => {
     if (open) {
+      document.documentElement.classList.add('overflow-hidden')
+      document.body.classList.add('overflow-hidden')
       localError.value = ''
       const data: Record<string, any> = {}
 
@@ -163,10 +167,18 @@ watch(
       })
 
       formData.value = data
+    } else {
+      document.documentElement.classList.remove('overflow-hidden')
+      document.body.classList.remove('overflow-hidden')
     }
   },
   { immediate: true }
 )
+
+onUnmounted(() => {
+  document.documentElement.classList.remove('overflow-hidden')
+  document.body.classList.remove('overflow-hidden')
+})
 
 function handleSubmit() {
   localError.value = ''
