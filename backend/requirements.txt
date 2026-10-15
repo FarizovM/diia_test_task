@@ -10,3 +10,9 @@ passlib[bcrypt]
 bcrypt==4.0.1
 redis
 python-multipart
+
+# Test dependencies
+pytest
+pytest-asyncio
+httpx
+aiosqlite
