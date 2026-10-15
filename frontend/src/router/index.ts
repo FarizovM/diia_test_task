@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import CrmLayout from '../layouts/CrmLayout.vue'
 import LoginView from '../views/LoginView.vue'
-import TasksView from '../views/TasksView.vue'
+import RegistryView from '../views/RegistryView.vue'
 import AboutView from '../views/AboutView.vue'
 
 const routes: RouteRecordRaw[] = [
@@ -20,7 +20,7 @@ const routes: RouteRecordRaw[] = [
             {
                 path: 'tasks',
                 name: 'Tasks',
-                component: TasksView
+                component: RegistryView
             },
         ],
     },

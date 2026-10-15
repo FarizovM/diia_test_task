@@ -4,16 +4,18 @@
         <aside class="w-72 bg-diia-dark text-white flex flex-col justify-between shrink-0">
             <div>
                 <!-- Логотип -->
-                <div class="p-6 border-b border-white/10 flex items-center gap-4">
-                    <div
-                        class="w-11 h-11 rounded-xl bg-white text-black flex items-center justify-center font-bold text-xl tracking-tighter">
-                        Дія
+                <router-link to="/about">
+                    <div class="p-6 border-b border-white/10 flex items-center gap-4">
+                        <div
+                            class="w-11 h-11 rounded-xl bg-white text-black flex items-center justify-center font-bold text-xl tracking-tighter">
+                            Дія
+                        </div>
+                        <div>
+                            <div class="font-bold text-base tracking-tight">ТРЕМБІТА</div>
+                            <div class="text-xs text-gray-400">Управління задачами</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="font-bold text-base tracking-tight">ТРЕМБІТА</div>
-                        <div class="text-xs text-gray-400">Управління задачами</div>
-                    </div>
-                </div>
+                </router-link>
 
                 <!-- Динамічне меню з JSON-конфігу -->
                 <nav class="p-4 space-y-1.5">
@@ -73,8 +75,7 @@
             </div>
         </aside>
 
-        <!-- Основний контент -->
-        <main class="flex-1 p-8 overflow-y-auto">
+        <main class="flex-1 p-8 overflow-y-scroll [scrollbar-gutter:stable]">
             <router-view />
         </main>
     </div>

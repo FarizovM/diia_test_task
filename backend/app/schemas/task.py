@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from app.db.models import TaskStatus, TaskPriority
 
@@ -26,3 +26,9 @@ class TaskResponse(TaskBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TaskRegistryResponse(BaseModel):
+    total: int
+    filtered: int
+    rows: List[TaskResponse]

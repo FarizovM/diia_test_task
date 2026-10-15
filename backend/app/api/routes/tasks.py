@@ -3,11 +3,11 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import Date, cast, or_
+from sqlalchemy import Date, cast, or_, func
 
 from app.db.database import get_db
 from app.db.models import Task, User, TaskStatus, TaskPriority
-from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
+from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskRegistryResponse
 from app.api.dependencies import get_current_user
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
@@ -24,7 +24,7 @@ async def create_task(
     await db.refresh(new_task)
     return new_task
 
-@router.get("/", response_model=List[TaskResponse])
+@router.get("/", response_model=TaskRegistryResponse)
 async def get_tasks(
     search: Optional[str] = Query(None,description="Пошуковий запит за назвою та описом"),
     status: Optional[TaskStatus] = Query(None,description="Фільтр за статусом"),
@@ -67,8 +67,15 @@ async def get_tasks(
     offset = limit * (page - 1)
     
 
-    query = select(Task).where(Task.created_by == current_user.user_id)
+    base_query = select(Task).where(Task.created_by == current_user.user_id)
 
+    total = (
+        await db.execute(
+            select(func.count(Task.task_id)).where(Task.created_by == current_user.user_id)
+        )
+    ).scalar() or 0
+
+    query = base_query
     if status:
         query = query.where(Task.status == status)
     if priority:
@@ -82,6 +89,12 @@ async def get_tasks(
                 Task.description.ilike(f"%{search}%")
             )
         )
+
+    filtered = (
+        await db.execute(
+            select(func.count()).select_from(query.subquery())
+        )
+    ).scalar() or 0
         
     query = query.order_by(order_clause)
     query = query.limit(limit).offset(offset)
@@ -93,7 +106,11 @@ async def get_tasks(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Tasks not found",
         )
-    return tasks
+    return TaskRegistryResponse(
+        total=total,
+        filtered=filtered,
+        rows=tasks
+    )
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
