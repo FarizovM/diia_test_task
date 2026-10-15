@@ -11,39 +11,19 @@ from app.api.dependencies import get_current_user
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.get("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/me",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Отримання профілю поточного користувача",
+    description="Повертає повну інформацію про поточного автентифікованого користувача (ID, email, ім'я, прізвище та по батькові) за переданим Bearer-токеном.",
+    response_description="Профіль авторизованого користувача",
+    responses={
+        200: {"description": "Профіль успішно отримано"},
+        401: {"description": "Неавторизований доступ, недійсний токен або термін його дії минув"}
+    }
+)
 async def get_me(
     current_user: User = Depends(get_current_user),
 ):
     return current_user
-
-@router.get("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def get_user(
-    user_id: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    result = await db.execute(select(User).where(User.user_id == user_id))
-    user = result.scalars().first()
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-    return user
-
-@router.get("/", response_model=List[UserResponse], status_code=status.HTTP_200_OK)
-async def get_users(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    result = await db.execute(select(User))
-    users = result.scalars().all()
-
-    if not users:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No users found",
-        )
-
-    return users

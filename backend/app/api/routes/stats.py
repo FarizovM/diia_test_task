@@ -29,7 +29,18 @@ STATS_BASE_SQL = """
     from tasks
 """
 
-@router.get("/all", response_model=TaskStats, status_code=status.HTTP_200_OK)
+@router.get(
+    "/all",
+    response_model=TaskStats,
+    status_code=status.HTTP_200_OK,
+    summary="Загальна статистика по всіх задачах системи",
+    description="Повертає глобальні аналітичні показники по всіх задачах у системі: розподіл за всіма 5 статусами, 5 пріоритетами, наявністю дедлайнів та простроченими термінами. Використовується для загального моніторингу на сторінці 'Про систему'.",
+    response_description="Зведена агрегована статистика за всіма задачами системи",
+    responses={
+        200: {"description": "Статистику успішно розраховано та повернуто"},
+        401: {"description": "Неавторизований доступ, потрібен дійсний токен"}
+    }
+)
 async def get_stats_all(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -39,7 +50,18 @@ async def get_stats_all(
     row = result.first()
     return row
 
-@router.get("/me", response_model=TaskStats, status_code=status.HTTP_200_OK)
+@router.get(
+    "/me",
+    response_model=TaskStats,
+    status_code=status.HTTP_200_OK,
+    summary="Персональна статистика поточного користувача",
+    description="Повертає агреговані аналітичні показники виключно за задачами, створеними поточним авторизованим користувачем (розподіл за статусами, пріоритетами, дедлайнами).",
+    response_description="Персональні показники задач користувача",
+    responses={
+        200: {"description": "Персональну статистику успішно отримано"},
+        401: {"description": "Неавторизований доступ, потрібен дійсний токен"}
+    }
+)
 async def get_stats(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)

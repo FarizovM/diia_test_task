@@ -1,39 +1,103 @@
 from datetime import date, datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import Date, cast, or_, func
 
 from app.db.database import get_db
 from app.db.models import Task, User, TaskStatus, TaskPriority
-from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskRegistryResponse
+from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskRegistryResponse, SortOrder
 from app.api.dependencies import get_current_user
+from app.core.logger import logger
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
-@router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=TaskResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Створення нової задачі",
+    description="Створює нову задачу для поточного автентифікованого користувача. Статус за замовчуванням — 'TODO', пріоритет — 'MEDIUM'. Творцем задачі автоматично призначається поточний користувач.",
+    response_description="Успішно створена задача з присвоєним task_id",
+    responses={
+        201: {"description": "Задачу успішно створено"},
+        401: {"description": "Неавторизований доступ"},
+        422: {"description": "Помилка валідації вхідних даних"}
+    }
+)
 async def create_task(
     task_in: TaskCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user) 
 ):
+    logger.info(f"Спроба створення нової задачі користувачем {current_user.email}: {task_in.model_dump_json()}")
+    
     new_task = Task(**task_in.model_dump(), created_by=current_user.user_id)
+
     db.add(new_task)
     await db.commit()
     await db.refresh(new_task)
+
+    logger.info(f"Нова задача створена: {TaskResponse.model_validate(new_task).model_dump_json()}")
     return new_task
 
-@router.get("/", response_model=TaskRegistryResponse)
+@router.get(
+    "/",
+    response_model=TaskRegistryResponse,
+    summary="Отримання реєстру задач (фільтрація, сортування, пагінація)",
+    description="Повертає реєстр задач поточного користувача. Підтримує повнотекстовий пошук за назвою та описом, фільтрацію за статусом, пріоритетом і дедлайном, динамічне сортування за будь-яким полем та посторінкову навігацію (пагінацію).",
+    response_description="Об'єкт реєстру з лічильниками total, filtered та списком знайдених рядків rows",
+    responses={
+        200: {"description": "Реєстр задач успішно отримано"},
+        400: {"description": "Некоректні параметри пагінації чи сортування"},
+        401: {"description": "Неавторизований доступ"}
+    }
+)
 async def get_tasks(
-    search: Optional[str] = Query(None,description="Пошуковий запит за назвою та описом"),
-    status: Optional[TaskStatus] = Query(None,description="Фільтр за статусом"),
-    priority: Optional[TaskPriority] = Query(None,description="Фільтр за пріоритетом"),
-    deadline: Optional[date] = Query(None,description="Фільтр за дедлайном"),
-    limit: Optional[int] = Query(default=10,description="Кількість задач на сторінці"),
-    page: Optional[int] = Query(default=1,description="Номер сторінки",),
-    sort_by: Optional[str] = Query(default="created_at",description="Сортування за полем"),
-    sort_order: Optional[str] = Query(default="desc",description="Порядок сортування"),
+    search: Optional[str] = Query(
+        None, 
+        description="Пошуковий запит (пошук підрядка в назві або описі)", 
+        examples=["підпис"]
+    ),
+    status: Optional[TaskStatus] = Query(
+        None, 
+        description="Фільтр за статусом задачі", 
+        examples=[TaskStatus.IN_PROGRESS]
+    ),
+    priority: Optional[TaskPriority] = Query(
+        None, 
+        description="Фільтр за пріоритетом задачі", 
+        examples=[TaskPriority.HIGH]
+    ),
+    deadline: Optional[date] = Query(
+        None, 
+        description="Фільтр за точною датою дедлайну (РРРР-ММ-ДД)", 
+        examples=["2026-10-31"]
+    ),
+    limit: Optional[int] = Query(
+        default=10, 
+        ge=1, 
+        le=100, 
+        description="Кількість задач на сторінці (від 1 до 100)", 
+        examples=[10]
+    ),
+    page: Optional[int] = Query(
+        default=1, 
+        ge=1, 
+        description="Номер сторінки (починається з 1)", 
+        examples=[1]
+    ),
+    sort_by: Optional[str] = Query(
+        default="created_at", 
+        description="Поле для сортування (created_at, deadline, priority, status, title)", 
+        examples=["created_at"]
+    ),
+    sort_order: Optional[SortOrder] = Query(
+        default=SortOrder.DESC, 
+        description="Напрямок сортування ('asc' або 'desc')", 
+        examples=[SortOrder.DESC]
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -108,9 +172,24 @@ async def get_tasks(
         rows=tasks
     )
 
-@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{task_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Видалення задачі",
+    description="Видаляє задачу за її унікальним ідентифікатором (UUID). Видалення дозволено лише користувачеві, який є автором цієї задачі.",
+    responses={
+        204: {"description": "Задачу успішно видалено"},
+        401: {"description": "Неавторизований доступ"},
+        403: {"description": "Заборонено: спроба видалення чужої задачі"},
+        404: {"description": "Задачу з таким ID не знайдено"}
+    }
+)
 async def delete_task(
-    task_id: str,
+    task_id: str = Path(
+        ..., 
+        description="Унікальний ідентифікатор задачі (UUIDv4)", 
+        examples=["123e4567-e89b-12d3-a456-426614174000"]
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -121,18 +200,41 @@ async def delete_task(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Не знайдено")
 
     if task.created_by != current_user.user_id:
+        logger.warning(f"Користувач {current_user.email} намагався видалити задачу {task_id}, яка не належить йому")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Немає прав на видалення цієї задачі")
 
     await db.delete(task)
     await db.commit()
 
-@router.put("/{task_id}", response_model=TaskResponse, status_code=status.HTTP_200_OK)
+    logger.info(f"Задачу {task_id} успішно видалено користувачем {current_user.email}")
+
+@router.put(
+    "/{task_id}",
+    response_model=TaskResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Оновлення даних задачі",
+    description="Оновлює поля існуючої задачі (назва, опис, статус, пріоритет, дедлайн). Редагувати задачу має право виключно її автор.",
+    response_description="Оновлений об'єкт задачі з актуальною датою updated_at",
+    responses={
+        200: {"description": "Задачу успішно оновлено"},
+        401: {"description": "Неавторизований доступ"},
+        403: {"description": "Заборонено: спроба редагування чужої задачі"},
+        404: {"description": "Задачу з таким ID не знайдено"},
+        422: {"description": "Помилка валідації вхідних полів"}
+    }
+)
 async def update_task(
-    task_id: str,
     task_in: TaskUpdate,
+    task_id: str = Path(
+        ..., 
+        description="Унікальний ідентифікатор задачі (UUIDv4)", 
+        examples=["123e4567-e89b-12d3-a456-426614174000"]
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    logger.info(f"Спроба редагування задачі користувачем {current_user.email}: {task_id}")
+    
     result = await db.execute(select(Task).where(Task.task_id == task_id))
     task = result.scalars().first()
 
@@ -140,6 +242,7 @@ async def update_task(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Не знайдено")
 
     if task.created_by != current_user.user_id:
+        logger.warning(f"Користувач {current_user.email} намагався редагувати задачу {task_id}, яка не належить йому")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Немає прав на редагування цієї задачі")
 
     task.title = task_in.title
@@ -152,4 +255,7 @@ async def update_task(
 
     await db.commit()
     await db.refresh(task)
+
+    logger.info(f"Задача {task_id} успішно оновлена користувачем {current_user.email}: {TaskResponse.model_validate(task).model_dump_json()}")
+
     return task
