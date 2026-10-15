@@ -7,7 +7,7 @@ from sqlalchemy import Date, cast, or_, func
 
 from app.db.database import get_db
 from app.db.models import Task, User, TaskStatus, TaskPriority
-from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskRegistryResponse, SortOrder
+from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskDetailsResponse, TaskRegistryResponse, SortOrder
 from app.api.dependencies import get_current_user
 from app.core.logger import logger
 
@@ -171,6 +171,41 @@ async def get_tasks(
         filtered=filtered,
         rows=tasks
     )
+
+
+@router.get(
+    "/{task_id}",
+    response_model=TaskDetailsResponse,
+    summary="Перегляд інформації про окрему задачу",
+    description="Повертає повну інформацію про задачу за її унікальним ідентифікатором (UUID). Доступ дозволено лише автору задачі.",
+    responses={
+        200: {"description": "Дані задачі успішно отримано"},
+        401: {"description": "Неавторизований доступ"},
+        403: {"description": "Заборонено: спроба перегляду чужої задачі"},
+        404: {"description": "Задачу з таким ID не знайдено"}
+    }
+)
+async def get_task(
+    task_id: str = Path(
+        ..., 
+        description="Унікальний ідентифікатор задачі (UUIDv4)", 
+        examples=["a1b2c3d4-e5f6-7890-1234-567890abcdef"]
+    ),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(select(Task).where(Task.task_id == task_id))
+    task = result.scalars().first()
+
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задачу не знайдено")
+
+    if task.created_by != current_user.user_id:
+        logger.warning(f"Користувач {current_user.user_id} намагався отримати чужу задачу {task_id}")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Немає доступу до цієї задачі")
+
+    return task
+
 
 @router.delete(
     "/{task_id}",

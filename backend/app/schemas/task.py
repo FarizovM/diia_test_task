@@ -88,6 +88,19 @@ class TaskResponse(TaskBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+class TaskDetailsResponse(TaskResponse):
+    created_by: str = Field(
+        ...,
+        description="ID користувача, що створив задачу",
+        examples=["a1b2c3d4-e5f6-7890-1234-567890abcdef"]
+    )
+    updated_by: Optional[str] = Field(
+        None,
+        description="ID користувача, що востаннє оновив задачу",
+        examples=["a1b2c3d4-e5f6-7890-1234-567890abcdef"]
+    )
+
+    model_config = ConfigDict(from_attributes=True)
 
 class TaskRegistryResponse(BaseModel):
     total: int = Field(

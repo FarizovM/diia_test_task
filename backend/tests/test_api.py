@@ -34,6 +34,59 @@ async def test_create_and_get_task(client: AsyncClient, auth_headers: dict):
     assert tasks[0]["task_id"] == task_id
 
 @pytest.mark.asyncio
+async def test_registry_filter_search_priority_deadline(client: AsyncClient, auth_headers: dict):
+    """Реєстр задач з фільтрами, пошуком за title та sorring за deadline"""
+    # Створюємо задачі з різними статусами та пріоритетами
+    create_res = await client.post(
+        "/api/v1/tasks/",
+        json={"title": "Тестова задача", "status": "todo", "priority": "medium", "deadline": "2026-12-01T18:00:00"},
+        headers=auth_headers,
+    )
+    task_id = create_res.json()["task_id"]
+
+    # Створюємо другу задачу з іншим статусом та пріоритетом
+    create_res_2 = await client.post(
+        "/api/v1/tasks/",
+        json={"title": "Друга тестова задача", "status": "in_progress", "priority": "high", "deadline": "2026-11-01T18:00:00"},
+        headers=auth_headers,
+    )
+    task_id_2 = create_res_2.json()["task_id"]
+
+    # Фільтруємо за статусом і сортуємо за дедлайном (DESC)
+    list_res = await client.get(
+        "/api/v1/tasks/?status=todo&search=Тестова&sort_by=deadline&sort_order=desc",
+        headers=auth_headers,
+    )
+    assert list_res.status_code == 200
+    registry = list_res.json()
+    assert registry["total"] == 2
+    assert registry["filtered"] == 1
+    tasks = registry["rows"]
+    assert len(tasks) == 1
+    assert tasks[0]["task_id"] == task_id
+    assert tasks[0]["deadline"].startswith("2026-12-01T18:00:00")
+
+@pytest.mark.asyncio
+async def test_task_details(client: AsyncClient, auth_headers: dict):
+    """Перевірка детальної інформації про задачу"""
+    create_res = await client.post(
+        "/api/v1/tasks/",
+        json={"title": "Тестова задача", "status": "todo", "priority": "medium"},
+        headers=auth_headers,
+    )
+    task_id = create_res.json()["task_id"]
+    detail_res = await client.get(f"/api/v1/tasks/{task_id}", headers=auth_headers)
+    assert detail_res.status_code == 200
+    assert detail_res.json()["task_id"] == task_id
+    assert detail_res.json()["title"] == "Тестова задача"
+    assert detail_res.json()["description"] is None
+    assert detail_res.json()["status"] == "todo"
+    assert detail_res.json()["priority"] == "medium"
+    assert detail_res.json()["deadline"] is None
+    assert detail_res.json()["created_by"] is not None
+
+
+@pytest.mark.asyncio
 async def test_update_and_delete_task(client: AsyncClient, auth_headers: dict):
     """Редагування статусу задачі та її видалення"""
     create_res = await client.post(
