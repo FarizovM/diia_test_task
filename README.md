@@ -132,9 +132,9 @@ docker exec -it task_manager_backend python seed.py
 * **Frontend (Веб-інтерфейс):** [http://localhost:3000](http://localhost:3000)
   * `/login` — Вхід та реєстрація
   * `/about` — Панель моніторингу та аналітики
-  * `/registry/tasks` — Реєстр задач (Low-Code таблиця, фільтри, CRUD)
+  * `/tasks` — Реєстр задач (Low-Code таблиця, фільтри, CRUD)
 * **Backend API (Swagger UI / OpenAPI):** [http://localhost:8000/docs](http://localhost:8000/docs)
-* **OpenAPI Schema (JSON):** [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
+* **OpenAPI Schema (JSON):** [http://localhost:8000/api/v1/openapi.json](http://localhost:8000/api/v1/openapi.json)
 
 ---
 
@@ -161,7 +161,12 @@ docker-compose logs -f frontend
 
 Перевірка компіляції фронтенду (TypeScript + Vite):
 ```bash
-cd frontend && npm run build
+docker exec -it task_manager_frontend bun run build
+```
+
+Перевірка бекенду (Python + FastAPI):
+```bash
+docker exec -it task_manager_backend pytest -v
 ```
 
 Зупинка всіх контейнерів:
