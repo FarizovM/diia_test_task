@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../api/axios'
 
@@ -197,18 +197,23 @@ function handleSort(columnKey: string) {
 // Скидання фільтрів
 function resetFilters() {
     searchQuery.value = ''
-    activeFilters.value = {}
     currentPage.value = 1
-    loadData()
+    if (Object.keys(activeFilters.value).length > 0) {
+        activeFilters.value = {}
+    } else {
+        loadData()
+    }
 }
 
 // Слідкуємо за зміною сторінки або ліміту
 watch([currentPage, pageSize], () => {
+    if (isLoadingConfig.value) return
     loadData()
 })
 
 // Слідкуємо за фільтрами
 watch(activeFilters, () => {
+    if (isLoadingConfig.value) return
     currentPage.value = 1
     loadData()
 }, { deep: true })
@@ -216,6 +221,7 @@ watch(activeFilters, () => {
 // Слідкуємо за пошуком із debounce
 let searchDebounce: any = null
 watch(searchQuery, () => {
+    if (isLoadingConfig.value) return
     clearTimeout(searchDebounce)
     searchDebounce = setTimeout(() => {
         currentPage.value = 1
@@ -322,9 +328,12 @@ async function loadConfig(name: string) {
         sortOrder.value = registryConfig.value?.defaultSort?.sortOrder || 'desc'
 
         currentPage.value = 1
-        activeFilters.value = {}
+        if (Object.keys(activeFilters.value).length > 0) {
+            activeFilters.value = {}
+        }
         searchQuery.value = ''
 
+        await nextTick()
         isLoadingConfig.value = false
 
         await loadData()
