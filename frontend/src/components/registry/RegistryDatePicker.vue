@@ -100,12 +100,14 @@
 
               <!-- Інпути годин та хвилин -->
               <div class="flex items-center gap-1 bg-diia-light/60 border border-gray-200 rounded-xl px-2 py-0.5">
-                <input type="text" inputmode="numeric" maxlength="2" v-model="hoursDisplay" @input="onHoursInput"
-                  @blur="onHoursBlur" @keydown.up.prevent="stepHours(1)" @keydown.down.prevent="stepHours(-1)"
+                <input ref="hoursInputRef" type="text" inputmode="numeric" maxlength="2" v-model="hoursDisplay"
+                  @focus="onHoursFocus" @input="onHoursInput" @blur="onHoursBlur"
+                  @keydown.up.prevent="stepHours(1)" @keydown.down.prevent="stepHours(-1)"
                   class="w-7 text-center text-xs font-bold text-diia-primary bg-transparent focus:outline-none focus:bg-white rounded transition" />
                 <span class="text-gray-400 font-bold">:</span>
-                <input type="text" inputmode="numeric" maxlength="2" v-model="minutesDisplay" @input="onMinutesInput"
-                  @blur="onMinutesBlur" @keydown.up.prevent="stepMinutes(1)" @keydown.down.prevent="stepMinutes(-1)"
+                <input ref="minutesInputRef" type="text" inputmode="numeric" maxlength="2" v-model="minutesDisplay"
+                  @focus="onMinutesFocus" @input="onMinutesInput" @blur="onMinutesBlur"
+                  @keydown.up.prevent="stepMinutes(1)" @keydown.down.prevent="stepMinutes(-1)"
                   class="w-7 text-center text-xs font-bold text-diia-primary bg-transparent focus:outline-none focus:bg-white rounded transition" />
               </div>
             </div>
@@ -172,9 +174,18 @@ const minutes = ref(0)
 const hoursDisplay = ref('18')
 const minutesDisplay = ref('00')
 
-function syncDisplayTime() {
-  hoursDisplay.value = String(hours.value).padStart(2, '0')
-  minutesDisplay.value = String(minutes.value).padStart(2, '0')
+const hoursInputRef = ref<HTMLInputElement | null>(null)
+const minutesInputRef = ref<HTMLInputElement | null>(null)
+const isHoursFocused = ref(false)
+const isMinutesFocused = ref(false)
+
+function syncDisplayTime(force = false) {
+  if (force || !isHoursFocused.value) {
+    hoursDisplay.value = String(hours.value).padStart(2, '0')
+  }
+  if (force || !isMinutesFocused.value) {
+    minutesDisplay.value = String(minutes.value).padStart(2, '0')
+  }
 }
 
 const weekDayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
@@ -397,7 +408,7 @@ function selectDay(day: CalendarDay) {
 function applyTimePreset(h: number, m: number) {
   hours.value = h
   minutes.value = m
-  syncDisplayTime()
+  syncDisplayTime(true)
   if (!selectedDate.value) {
     selectedDate.value = new Date()
   }
@@ -407,18 +418,33 @@ function applyTimePreset(h: number, m: number) {
   emitDate(d)
 }
 
+function onHoursFocus(e: FocusEvent) {
+  isHoursFocused.value = true
+  ;(e.target as HTMLInputElement)?.select()
+}
+
+function onMinutesFocus(e: FocusEvent) {
+  isMinutesFocused.value = true
+  ;(e.target as HTMLInputElement)?.select()
+}
+
 function onHoursInput() {
   hoursDisplay.value = hoursDisplay.value.replace(/\D/g, '').slice(0, 2)
-  if (hoursDisplay.value !== '') {
-    const val = parseInt(hoursDisplay.value, 10)
+  if (hoursDisplay.value.length === 2) {
+    let val = parseInt(hoursDisplay.value, 10)
     if (!isNaN(val)) {
-      hours.value = Math.max(0, Math.min(23, val))
+      val = Math.max(0, Math.min(23, val))
+      hours.value = val
+      hoursDisplay.value = String(val).padStart(2, '0')
       updateSelectedDateTime()
+      minutesInputRef.value?.focus()
+      minutesInputRef.value?.select()
     }
   }
 }
 
 function onHoursBlur() {
+  isHoursFocused.value = false
   let val = parseInt(hoursDisplay.value, 10)
   if (isNaN(val) || val < 0) val = 0
   if (val > 23) val = 23
@@ -429,16 +455,19 @@ function onHoursBlur() {
 
 function onMinutesInput() {
   minutesDisplay.value = minutesDisplay.value.replace(/\D/g, '').slice(0, 2)
-  if (minutesDisplay.value !== '') {
-    const val = parseInt(minutesDisplay.value, 10)
+  if (minutesDisplay.value.length === 2) {
+    let val = parseInt(minutesDisplay.value, 10)
     if (!isNaN(val)) {
-      minutes.value = Math.max(0, Math.min(59, val))
+      val = Math.max(0, Math.min(59, val))
+      minutes.value = val
+      minutesDisplay.value = String(val).padStart(2, '0')
       updateSelectedDateTime()
     }
   }
 }
 
 function onMinutesBlur() {
+  isMinutesFocused.value = false
   let val = parseInt(minutesDisplay.value, 10)
   if (isNaN(val) || val < 0) val = 0
   if (val > 59) val = 59
@@ -480,7 +509,7 @@ function setToday() {
   viewMonth.value = d.getMonth()
   hours.value = d.getHours()
   minutes.value = d.getMinutes()
-  syncDisplayTime()
+  syncDisplayTime(true)
   selectedDate.value = d
   emitDate(d)
 }
