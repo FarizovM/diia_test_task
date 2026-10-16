@@ -4,11 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import Date, cast, or_, func
+from redis.asyncio import Redis
 
 from app.db.database import get_db
+from app.db.redis import get_redis
 from app.db.models import Task, User, TaskStatus, TaskPriority
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskDetailsResponse, TaskRegistryResponse, SortOrder
 from app.api.dependencies import get_current_user
+from app.services.stats import update_stats_cache
 from app.core.logger import logger
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
@@ -29,6 +32,7 @@ router = APIRouter(prefix="/tasks", tags=["Tasks"])
 async def create_task(
     task_in: TaskCreate,
     db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
     current_user: User = Depends(get_current_user) 
 ):
     logger.info(f"Спроба створення нової задачі користувачем {current_user.email}: {task_in.model_dump_json()}")
@@ -38,6 +42,9 @@ async def create_task(
     db.add(new_task)
     await db.commit()
     await db.refresh(new_task)
+
+    # Оновлення кешу статистики в Redis
+    await update_stats_cache(db=db, redis=redis, user_id=current_user.user_id)
 
     logger.info(f"Нова задача створена: {TaskResponse.model_validate(new_task).model_dump_json()}")
     return new_task
@@ -226,6 +233,7 @@ async def delete_task(
         examples=["123e4567-e89b-12d3-a456-426614174000"]
     ),
     db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
     current_user: User = Depends(get_current_user)
 ):
     result = await db.execute(select(Task).where(Task.task_id == task_id))
@@ -240,6 +248,9 @@ async def delete_task(
 
     await db.delete(task)
     await db.commit()
+
+    # Оновлення кешу статистики в Redis
+    await update_stats_cache(db=db, redis=redis, user_id=current_user.user_id)
 
     logger.info(f"Задачу {task_id} успішно видалено користувачем {current_user.email}")
 
@@ -266,6 +277,7 @@ async def update_task(
         examples=["123e4567-e89b-12d3-a456-426614174000"]
     ),
     db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
     current_user: User = Depends(get_current_user)
 ):
     logger.info(f"Спроба редагування задачі користувачем {current_user.email}: {task_id}")
@@ -280,16 +292,24 @@ async def update_task(
         logger.warning(f"Користувач {current_user.email} намагався редагувати задачу {task_id}, яка не належить йому")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Немає прав на редагування цієї задачі")
 
-    task.title = task_in.title
-    task.description = task_in.description
-    task.status = task_in.status
-    task.priority = task_in.priority
-    task.deadline = task_in.deadline
+    # task.title = task_in.title
+    # task.description = task_in.description
+    # task.status = task_in.status
+    # task.priority = task_in.priority
+    # task.deadline = task_in.deadline
+
+    update_data = task_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(task, field, value)
+
     task.updated_at = datetime.now(timezone.utc)
     task.updated_by = current_user.user_id
 
     await db.commit()
     await db.refresh(task)
+
+    # Оновлення кешу статистики в Redis
+    await update_stats_cache(db=db, redis=redis, user_id=current_user.user_id)
 
     logger.info(f"Задача {task_id} успішно оновлена користувачем {current_user.email}: {TaskResponse.model_validate(task).model_dump_json()}")
 

@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
+from app.core.security_headers import SecurityHeadersMiddleware
 from app.api.routes import auth, tasks, users, stats
 from app.core.logger import logger
 
@@ -49,10 +50,13 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+# Захисні HTTP-заголовки та валідація Origin/Referer
+app.add_middleware(SecurityHeadersMiddleware)
+
 # Налаштування CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

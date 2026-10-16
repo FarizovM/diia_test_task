@@ -117,7 +117,7 @@ async def test_update_and_delete_task(client: AsyncClient, auth_headers: dict):
 @pytest.mark.asyncio
 async def test_logout_revokes_token(client: AsyncClient, auth_headers: dict):
     """Після виклику /logout токен потрапляє в Blacklist і більше не працює"""
-    logout_res = await client.get("/api/v1/auth/logout", headers=auth_headers)
+    logout_res = await client.post("/api/v1/auth/logout", headers=auth_headers)
     assert logout_res.status_code == 200
 
     # Повторний запит із тим самим токеном має повернути 401

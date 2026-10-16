@@ -98,7 +98,7 @@ async def login(
     
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.get(
+@router.post(
     "/logout",
     summary="Вихід із системи (анулювання токена)",
     description="Анулює діючий JWT токен авторизованого користувача шляхом додавання його до чорного списку (Redis Blacklist) на час дії його TTL, унеможливлюючи його повторне використання.",

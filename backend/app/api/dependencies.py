@@ -39,8 +39,6 @@ async def get_current_user(
             raise credentials_exception
     except InvalidTokenError:
         raise credentials_exception
-        
-    # TODO: Тут пізніше додамо перевірку Redis, чи не розлогінився користувач (blacklist)
 
     result = await db.execute(select(User).where(User.user_id == user_id))
     user = result.scalars().first()

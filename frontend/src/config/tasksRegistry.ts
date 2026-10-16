@@ -86,6 +86,14 @@ export const tasksRegistry: RegistryConfig<TaskColumnKey> = {
       width: '180px',
       sortable: true,
     },
+    {
+      key: 'created_at',
+      label: 'Дата створення',
+      type: 'date',
+      width: '180px',
+      sortable: true,
+      readonly: true,
+    },
   ],
   filters: [
     {

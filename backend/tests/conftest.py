@@ -16,18 +16,31 @@ engine_test = create_async_engine(TEST_DATABASE_URL, echo=False)
 AsyncSessionTest = async_sessionmaker(engine_test, class_=AsyncSession, expire_on_commit=False)
 
 class FakeRedis:
-    """Мок для Redis, щоб тестувати логаут та blacklist без реального Redis"""
+    """Мок для Redis, щоб тестувати логаут, blacklist та кешування статистики без реального Redis"""
     def __init__(self):
         self.store = {}
 
     async def get(self, key: str):
         return self.store.get(key)
 
+    async def set(self, key: str, value: str, ex: int = None):
+        self.store[key] = value
+        return True
+
     async def setex(self, key: str, ttl: int, value: str):
         self.store[key] = value
         return True
 
+    async def delete(self, *keys: str):
+        for k in keys:
+            self.store.pop(k, None)
+        return True
+
 fake_redis = FakeRedis()
+
+@pytest.fixture(scope="function")
+def redis_mock():
+    return fake_redis
 
 @pytest_asyncio.fixture(scope="function")
 async def db_session():
