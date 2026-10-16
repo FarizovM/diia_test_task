@@ -1,8 +1,19 @@
 {
-  "name": "frontend",
+  "name": "diia_test_task_frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "keywords": [
+    "vue",
+    "diia",
+    "test",
+    "task",
+    "manager",
+    "crm",
+    "diia_test_task_frontend"
+  ],
+  "author": "Maksym Farizov",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
