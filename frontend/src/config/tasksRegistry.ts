@@ -67,6 +67,7 @@ export const tasksRegistry: RegistryConfig<TaskColumnKey> = {
       width: '160px',
       options: TASK_PRIORITY_OPTIONS,
       sortable: true,
+      required: true,
       defaultValue: 'medium'
     },
     {
@@ -75,6 +76,7 @@ export const tasksRegistry: RegistryConfig<TaskColumnKey> = {
       type: 'select',
       width: '170px',
       options: TASK_STATUS_OPTIONS,
+      required: true,
       sortable: true,
     },
     {
